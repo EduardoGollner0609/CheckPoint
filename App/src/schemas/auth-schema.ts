@@ -16,7 +16,7 @@ export const registerSchema = z.object({
     companyName: z.string().optional(),
     cnpj: z.string().optional(),
     companyCode: z.string().optional(),
-    name: z.string().min(2, "Nome obrigatório"),
+    name: z.string().optional(),
     email: z.string().email("E-mail inválido"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
 }).superRefine((data, ctx) => {

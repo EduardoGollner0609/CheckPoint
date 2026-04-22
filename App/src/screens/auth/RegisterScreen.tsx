@@ -77,7 +77,6 @@ export default function RegisterScreen() {
                 </View>
 
                 <View style={styles.formArea}>
-                    {/* ── Seletor de tipo ── */}
                     <View style={styles.typeContainer}>
                         <TouchableOpacity
                             style={[styles.typeBtn, type === "OWNER" && styles.typeBtnActive]}
@@ -112,7 +111,6 @@ export default function RegisterScreen() {
 
                     {type === "OWNER" ? (
                         <>
-                            {/* Nome da empresa */}
                             <Text style={styles.label}>NOME DA EMPRESA</Text>
                             <Controller
                                 control={control}
@@ -213,40 +211,41 @@ export default function RegisterScreen() {
                                     <Text style={styles.erroText}>{errors.companyCode.message}</Text>
                                 </View>
                             )}
-                        </>
-                    )}
 
-                    <Text style={[styles.label, { marginTop: 14 }]}>NOME COMPLETO</Text>
-                    <Controller
-                        control={control}
-                        name="name"
-                        render={({ field: { onChange, value } }) => (
-                            <View style={[
-                                styles.inputWrapper,
-                                value && styles.inputFocus,
-                                errors.name && styles.inputError,
-                            ]}>
-                                <MaterialCommunityIcons
-                                    name="account-outline"
-                                    size={18}
-                                    color={errors.name ? "#E24B4A" : value ? "#1D9E75" : "#bbb"}
-                                />
-                                <TextInput
-                                    style={styles.input}
-                                    placeholder="João da Silva"
-                                    placeholderTextColor="#bbb"
-                                    value={value}
-                                    onChangeText={onChange}
-                                    autoCapitalize="words"
-                                />
-                            </View>
-                        )}
-                    />
-                    {errors.name && (
-                        <View style={styles.erroRow}>
-                            <MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" />
-                            <Text style={styles.erroText}>{errors.name.message}</Text>
-                        </View>
+                            <Text style={[styles.label, { marginTop: 14 }]}>NOME COMPLETO</Text>
+                            <Controller
+                                control={control}
+                                name="name"
+                                render={({ field: { onChange, value } }) => (
+                                    <View style={[
+                                        styles.inputWrapper,
+                                        value && styles.inputFocus,
+                                        errors.name && styles.inputError,
+                                    ]}>
+                                        <MaterialCommunityIcons
+                                            name="account-outline"
+                                            size={18}
+                                            color={errors.name ? "#E24B4A" : value ? "#1D9E75" : "#bbb"}
+                                        />
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="João da Silva"
+                                            placeholderTextColor="#bbb"
+                                            value={value}
+                                            onChangeText={onChange}
+                                            autoCapitalize="words"
+                                        />
+                                    </View>
+                                )}
+                            />
+                            {errors.name && (
+                                <View style={styles.erroRow}>
+                                    <MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" />
+                                    <Text style={styles.erroText}>{errors.name.message}</Text>
+                                </View>
+                            )}
+
+                        </>
                     )}
 
                     <Text style={[styles.label, { marginTop: 14 }]}>E-MAIL</Text>
