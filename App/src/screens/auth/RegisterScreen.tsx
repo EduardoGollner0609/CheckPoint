@@ -22,7 +22,7 @@ type NavigationProps = NativeStackNavigationProp<AuthStackParams, "Register">;
 
 export default function RegisterScreen() {
     const navigation = useNavigation<NavigationProps>();
-    const [type, setType] = useState<"OWNER" | "EMPLOYEE">("OWNER");
+    const [type, setType] = useState<"COMPANY" | "USER">("COMPANY");
     const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -34,10 +34,10 @@ export default function RegisterScreen() {
     } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
         mode: "onChange",
-        defaultValues: { type: "OWNER" },
+        defaultValues: { type: "COMPANY" },
     });
 
-    const handleSelectType = (t: "OWNER" | "EMPLOYEE") => {
+    const handleSelectType = (t: "COMPANY" | "USER") => {
         setType(t);
         setValue("type", t, { shouldValidate: true });
     };
@@ -79,37 +79,37 @@ export default function RegisterScreen() {
                 <View style={styles.formArea}>
                     <View style={styles.typeContainer}>
                         <TouchableOpacity
-                            style={[styles.typeBtn, type === "OWNER" && styles.typeBtnActive]}
-                            onPress={() => handleSelectType("OWNER")}
+                            style={[styles.typeBtn, type === "COMPANY" && styles.typeBtnActive]}
+                            onPress={() => handleSelectType("COMPANY")}
                             activeOpacity={0.8}
                         >
                             <MaterialCommunityIcons
                                 name="office-building-outline"
                                 size={18}
-                                color={type === "OWNER" ? "#fff" : "#888"}
+                                color={type === "COMPANY" ? "#fff" : "#888"}
                             />
-                            <Text style={[styles.typeText, type === "OWNER" && styles.typeTextActive]}>
+                            <Text style={[styles.typeText, type === "COMPANY" && styles.typeTextActive]}>
                                 Empresa
                             </Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.typeBtn, type === "EMPLOYEE" && styles.typeBtnActive]}
-                            onPress={() => handleSelectType("EMPLOYEE")}
+                            style={[styles.typeBtn, type === "USER" && styles.typeBtnActive]}
+                            onPress={() => handleSelectType("USER")}
                             activeOpacity={0.8}
                         >
                             <MaterialCommunityIcons
                                 name="account-hard-hat-outline"
                                 size={18}
-                                color={type === "EMPLOYEE" ? "#fff" : "#888"}
+                                color={type === "USER" ? "#fff" : "#888"}
                             />
-                            <Text style={[styles.typeText, type === "EMPLOYEE" && styles.typeTextActive]}>
+                            <Text style={[styles.typeText, type === "USER" && styles.typeTextActive]}>
                                 Funcionário
                             </Text>
                         </TouchableOpacity>
                     </View>
 
-                    {type === "OWNER" ? (
+                    {type === "COMPANY" ? (
                         <>
                             <Text style={styles.label}>NOME DA EMPRESA</Text>
                             <Controller
@@ -147,17 +147,17 @@ export default function RegisterScreen() {
                             <Text style={[styles.label, { marginTop: 14 }]}>CNPJ</Text>
                             <Controller
                                 control={control}
-                                name="cnpj"
+                                name="document"
                                 render={({ field: { onChange, value } }) => (
                                     <View style={[
                                         styles.inputWrapper,
                                         value && styles.inputFocus,
-                                        errors.cnpj && styles.inputError,
+                                        errors.document && styles.inputError,
                                     ]}>
                                         <MaterialCommunityIcons
                                             name="card-account-details-outline"
                                             size={18}
-                                            color={errors.cnpj ? "#E24B4A" : value ? "#1D9E75" : "#bbb"}
+                                            color={errors.document ? "#E24B4A" : value ? "#1D9E75" : "#bbb"}
                                         />
                                         <TextInput
                                             style={styles.input}
@@ -170,10 +170,10 @@ export default function RegisterScreen() {
                                     </View>
                                 )}
                             />
-                            {errors.cnpj && (
+                            {errors.document && (
                                 <View style={styles.erroRow}>
                                     <MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" />
-                                    <Text style={styles.erroText}>{errors.cnpj.message}</Text>
+                                    <Text style={styles.erroText}>{errors.document.message}</Text>
                                 </View>
                             )}
                         </>
@@ -209,6 +209,39 @@ export default function RegisterScreen() {
                                 <View style={styles.erroRow}>
                                     <MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" />
                                     <Text style={styles.erroText}>{errors.companyCode.message}</Text>
+                                </View>
+                            )}
+
+                            <Text style={[styles.label, { marginTop: 14 }]}>CPF</Text>
+                            <Controller
+                                control={control}
+                                name="document"
+                                render={({ field: { onChange, value } }) => (
+                                    <View style={[
+                                        styles.inputWrapper,
+                                        value && styles.inputFocus,
+                                        errors.document && styles.inputError,
+                                    ]}>
+                                        <MaterialCommunityIcons
+                                            name="card-account-details-outline"
+                                            size={18}
+                                            color={errors.document ? "#E24B4A" : value ? "#1D9E75" : "#bbb"}
+                                        />
+                                        <TextInput
+                                            style={styles.input}
+                                            placeholder="XX.XXX.XXX/XXXX-XX"
+                                            placeholderTextColor="#bbb"
+                                            value={value}
+                                            onChangeText={v => onChange(maskCnpj(v))}
+                                            keyboardType="numeric"
+                                        />
+                                    </View>
+                                )}
+                            />
+                            {errors.document && (
+                                <View style={styles.erroRow}>
+                                    <MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" />
+                                    <Text style={styles.erroText}>{errors.document.message}</Text>
                                 </View>
                             )}
 
