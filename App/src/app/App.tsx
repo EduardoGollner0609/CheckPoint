@@ -1,9 +1,15 @@
-import HomeScreen from "../screens/HomeScreen";
-import LoginScreen from "../screens/LoginScreen";
-
+import { NavigationContainer } from '@react-navigation/native';
+import AuthNavigator from '../navigation/AuthNavigator';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 export default function App() {
+  const queryClient = new QueryClient()
+
   return (
-    <LoginScreen/>
+    <QueryClientProvider client={queryClient}>
+      <NavigationContainer>
+        <AuthNavigator />
+      </NavigationContainer>
+    </QueryClientProvider>
   );
 }
