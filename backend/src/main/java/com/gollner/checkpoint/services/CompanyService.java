@@ -28,10 +28,6 @@ public class CompanyService {
     }
 
     public RegisterResponseDTO register(RegisterCompanyDTO dto) {
-        if (companyRepository.existsByDocument(dto.document())) {
-            throw new RuntimeException("Empresa já cadastrada");
-        }
-
         Company company = new Company();
         company.setName(dto.name());
         company.setDocument(dto.document());

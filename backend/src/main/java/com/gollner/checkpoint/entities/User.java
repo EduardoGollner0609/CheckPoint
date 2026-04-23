@@ -65,7 +65,7 @@ public class User implements UserDetails {
     }
 
     public void setDocument(String document) {
-        this.document = document;
+        this.document = document.replaceAll("\\D", "");
     }
 
     public String getEmail() {

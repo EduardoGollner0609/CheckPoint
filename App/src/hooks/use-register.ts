@@ -1,7 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { registerUser, registerCompany } from "../services/auth-service";
 import { RegisterCompanyDTO, RegisterUserDTO } from "../types/auth-types";
-//import { toast } from "sonner-native";
 import { AxiosError } from "axios";
 import Toast from "react-native-toast-message";
 

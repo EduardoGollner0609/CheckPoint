@@ -50,7 +50,7 @@ public class Company {
     }
 
     public void setDocument(String document) {
-        this.document = document;
+        this.document = document.replaceAll("\\D", "");
     }
 
     public String getCode() {

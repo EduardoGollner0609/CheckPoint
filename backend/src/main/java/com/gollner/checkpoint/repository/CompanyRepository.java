@@ -7,9 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface CompanyRepository extends JpaRepository<Company, UUID> {
-
-    Optional<Company> findByCode(String code);
+    Optional<Company> findByCodeIgnoreCase(String code);
 
     boolean existsByDocument(String document);
 
+    boolean existsByCode(String code);
 }

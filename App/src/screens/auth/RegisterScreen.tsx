@@ -16,8 +16,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigation, CommonActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParams } from "../../navigation/AuthNavigator";
-import { maskCnpj } from "../../helpers/mask";
+import { maskCnpj, maskCpf, onlyNumbers } from "../../helpers/mask";
 import { useRegister } from "../../hooks/use-register";
+import { AxiosError, AxiosRequestConfig } from "axios";
+import { backendErrorInForm } from "../../utils/request";
 
 type NavigationProps = NativeStackNavigationProp<AuthStackParams, "Register">;
 
@@ -29,9 +31,9 @@ export default function RegisterScreen() {
     const {
         control,
         handleSubmit,
-        setValue,
         reset,
         formState: { errors, isValid },
+        setError
     } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
         mode: "onChange",
@@ -42,16 +44,30 @@ export default function RegisterScreen() {
 
     const handleSelectType = (t: "COMPANY" | "USER") => {
         setType(t);
-        setValue("type", t, { shouldValidate: true });
+
+        reset({
+            type: t,
+            name: "",
+            document: "",
+            companyCode: "",
+            email: "",
+            password: "",
+        });
     };
 
     const onSubmit = (data: RegisterForm) => {
+        const request = { ...data, document: onlyNumbers(data.document) }
+
         register(
-            { type: data?.type, data },
+            { type: data?.type, data: request },
             {
                 onSuccess: () => {
-                    reset();
                     navigation.replace("Login");
+                },
+                onError: (err: AxiosError<any>) => {
+                    const apiErrors = err?.response?.data?.errors;
+
+                    backendErrorInForm(apiErrors, setError);
                 }
             }
         );
@@ -174,7 +190,7 @@ export default function RegisterScreen() {
                                 render={({ field: { onChange, value } }) => (
                                     <View style={[styles.inputWrapper, value && styles.inputFocus, errors.document && styles.inputError]}>
                                         <MaterialCommunityIcons name="card-account-details-outline" size={18} color={errors.document ? "#E24B4A" : value ? "#1D9E75" : "#bbb"} />
-                                        <TextInput style={styles.input} placeholder="XXX.XXX.XXX-XX" placeholderTextColor="#bbb" value={value} onChangeText={v => onChange(maskCnpj(v))} keyboardType="numeric" />
+                                        <TextInput style={styles.input} placeholder="XXX.XXX.XXX-XX" placeholderTextColor="#bbb" value={value} onChangeText={v => onChange(maskCpf(v))} keyboardType="numeric" />
                                     </View>
                                 )}
                             />

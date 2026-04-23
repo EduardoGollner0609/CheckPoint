@@ -2,18 +2,14 @@ package com.gollner.checkpoint.controllers;
 
 import com.gollner.checkpoint.dto.auth.request.LoginRequestDTO;
 import com.gollner.checkpoint.dto.auth.response.LoginResponseDTO;
-import com.gollner.checkpoint.entities.User;
 import com.gollner.checkpoint.services.AuthService;
-import com.gollner.checkpoint.services.TokenService;
 import com.gollner.checkpoint.services.UserService;
 import com.gollner.checkpoint.services.CompanyService;
 import com.gollner.checkpoint.dto.auth.request.RegisterCompanyDTO;
 import com.gollner.checkpoint.dto.auth.response.RegisterResponseDTO;
 import com.gollner.checkpoint.dto.auth.request.RegisterUserDTO;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -35,13 +31,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO dto) {
+    public ResponseEntity<LoginResponseDTO> login(@Valid @RequestBody LoginRequestDTO dto) {
         LoginResponseDTO response = authService.login(dto);
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register/company")
-    public ResponseEntity<RegisterResponseDTO> registerCompany(@RequestBody RegisterCompanyDTO dto) {
+    public ResponseEntity<RegisterResponseDTO> registerCompany(@Valid @RequestBody RegisterCompanyDTO dto) {
 
         RegisterResponseDTO response = companyService.register(dto);
 
@@ -53,7 +49,7 @@ public class AuthController {
     }
 
     @PostMapping("/register/user")
-    public ResponseEntity<RegisterResponseDTO> registerUser(@RequestBody RegisterUserDTO dto) {
+    public ResponseEntity<RegisterResponseDTO> registerUser(@Valid @RequestBody RegisterUserDTO dto) {
 
         RegisterResponseDTO response = userService.register(dto);
 

@@ -1,6 +1,5 @@
-import { RegisterForm } from "../schemas/auth-schema";
 import { RegisterCompanyDTO, RegisterUserDTO } from "../types/auth-types";
-import { api } from "./request";
+import { api } from "../utils/request";
 
 export const registerUser = async (data: RegisterUserDTO) => {
   const url = "/auth/register/user"

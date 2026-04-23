@@ -3,8 +3,10 @@ package com.gollner.checkpoint.services;
 import com.gollner.checkpoint.dto.auth.request.LoginRequestDTO;
 import com.gollner.checkpoint.dto.auth.response.LoginResponseDTO;
 import com.gollner.checkpoint.entities.User;
+import com.gollner.checkpoint.services.exceptions.UnauthorizedException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,12 +22,17 @@ public class AuthService {
     }
 
     public LoginResponseDTO login(LoginRequestDTO loginRequestDTO) {
-        var auth = new UsernamePasswordAuthenticationToken(loginRequestDTO.email(), loginRequestDTO.password());
+        try {
+            var auth = new UsernamePasswordAuthenticationToken(loginRequestDTO.email(), loginRequestDTO.password());
 
-        var authentication = authenticationManager.authenticate(auth);
+            var authentication = authenticationManager.authenticate(auth);
 
-        User user = (User) authentication.getPrincipal();
+            User user = (User) authentication.getPrincipal();
 
-        return new LoginResponseDTO(tokenService.generateToken(user));
+            return new LoginResponseDTO(tokenService.generateToken(user));
+        }
+        catch(AuthenticationException e) {
+            throw new UnauthorizedException("Credenciais inválidas");
+        }
     }
 }

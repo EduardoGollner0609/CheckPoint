@@ -8,6 +8,8 @@ import com.gollner.checkpoint.entities.User;
 import com.gollner.checkpoint.repository.CompanyRepository;
 import com.gollner.checkpoint.repository.UserRepository;
 import com.gollner.checkpoint.dto.auth.response.RegisterResponseDTO;
+import com.gollner.checkpoint.services.exceptions.ResourceNotFoundException;
+import com.gollner.checkpoint.services.exceptions.UnauthorizedException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,8 +32,8 @@ public class UserService implements UserDetailsService {
     }
 
     public RegisterResponseDTO register(RegisterUserDTO dto) {
-        Company company = companyRepository.findByCode(dto.companyCode())
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        Company company = companyRepository.findByCodeIgnoreCase(dto.companyCode())
+                .orElseThrow(() -> new ResourceNotFoundException("Empresa não encontrada para o código informado."));
 
         User user = new User();
         user.setName(dto.name());
@@ -49,6 +51,6 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findUserByEmail(username)
-                .orElseThrow(() -> new RuntimeException("Credenciais inválidas"));
+                .orElseThrow(() -> new UsernameNotFoundException("Credenciais inválidas"));
     }
 }
