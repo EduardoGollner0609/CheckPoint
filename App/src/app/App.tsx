@@ -2,6 +2,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import AuthNavigator from '../navigation/AuthNavigator';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
+import { toastConfig } from '../components/ToastBase';
 
 export default function App() {
   const queryClient = new QueryClient()
@@ -10,7 +11,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <NavigationContainer>
         <AuthNavigator />
-        <Toast />
+        <Toast config={toastConfig} />
       </NavigationContainer>
     </QueryClientProvider>
   );

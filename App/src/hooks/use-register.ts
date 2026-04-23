@@ -20,8 +20,8 @@ export function useRegister() {
                 type: "success",
                 text1: variables.type === "COMPANY" ? "Empresa cadastrada!" : "Funcionário cadastrado!",
                 text2: variables.type === "COMPANY"
-                    ? "Sua empresa foi registrada com sucesso. Tente fazer o login"
-                    : "Cadastro realizado com sucesso. Tente fazer o login",
+                    ? "Sua empresa foi registrada com sucesso."
+                    : "Cadastro realizado com sucesso.",
             });
         },
         onError: (error: AxiosError<any>) => {
