@@ -1,4 +1,4 @@
-package com.gollner.checkpoint.dto.auth.response;
+package com.gollner.checkpoint.dto.auth.request;
 
 public record RegisterUserDTO(
         String name,

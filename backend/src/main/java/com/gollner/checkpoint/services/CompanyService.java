@@ -1,42 +1,59 @@
 package com.gollner.checkpoint.services;
 
+import com.gollner.checkpoint.dto.auth.request.RegisterCompanyDTO;
 import com.gollner.checkpoint.entities.enums.Role;
 import com.gollner.checkpoint.repository.CompanyRepository;
-import com.gollner.checkpoint.repository.UserRepository;
-import com.gollner.checkpoint.dto.auth.request.RegisterResponseDTO;
-import com.gollner.checkpoint.dto.auth.response.RegisterUserDTO;
+import com.gollner.checkpoint.dto.auth.response.RegisterResponseDTO;
 import com.gollner.checkpoint.entities.Company;
 import com.gollner.checkpoint.entities.User;
-
+import com.gollner.checkpoint.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public CompanyService(CompanyRepository companyRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          PasswordEncoder passwordEncoder) {
         this.companyRepository = companyRepository;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public RegisterResponseDTO register(RegisterUserDTO dto) {
+    public RegisterResponseDTO register(RegisterCompanyDTO dto) {
+        if (companyRepository.existsByDocument(dto.document())) {
+            throw new RuntimeException("Empresa já cadastrada");
+        }
 
-        Company company = companyRepository.findByCode(dto.companyCode())
-                .orElseThrow(() -> new RuntimeException("Empresa não encontrada"));
+        Company company = new Company();
+        company.setName(dto.name());
+        company.setDocument(dto.document());
+        company.setCode(generateCode());
+
+        company = companyRepository.save(company);
 
         User user = new User();
         user.setName(dto.name());
         user.setEmail(dto.email());
-        user.setPassword(dto.password());
+        user.setPassword(passwordEncoder.encode(dto.password()));
         user.setDocument(dto.document());
         user.setCompany(company);
-        user.setRole(Role.OPERATOR);
+        user.setRole(Role.ROLE_ADMIN);
 
         user = userRepository.save(user);
 
         return new RegisterResponseDTO(user.getId());
     }
+
+    private String generateCode() {
+        return UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+    }
+
 }

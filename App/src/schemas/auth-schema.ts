@@ -13,10 +13,9 @@ export type LoginForm = z.infer<typeof loginSchema>;
 
 export const registerSchema = z.object({
     type: z.enum(["COMPANY", "USER"]),
-    companyName: z.string().optional(),
+    name: z.string().optional(),
     document: z.string().optional(),
     companyCode: z.string().optional(),
-    name: z.string().optional(),
     email: z.string().email("E-mail inválido"),
     password: z.string().min(6, "Mínimo 6 caracteres"),
 });

@@ -1,6 +1,6 @@
 package com.gollner.checkpoint.entities.enums;
 
 public enum Role {
-    ADMIN,
-    OPERATOR
+    ROLE_ADMIN,
+    ROLE_OPERATOR
 }
