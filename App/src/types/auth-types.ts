@@ -1,4 +1,3 @@
-
 export type RegisterCompanyDTO = {
     name: string;
     document: string;
@@ -11,5 +10,5 @@ export type RegisterUserDTO = {
     document: string;
     email: string;
     password: string;
-    code: string;
+    companyCode: string;
 };

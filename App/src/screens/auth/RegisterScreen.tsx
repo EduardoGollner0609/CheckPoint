@@ -18,7 +18,6 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParams } from "../../navigation/AuthNavigator";
 import { maskCnpj } from "../../helpers/mask";
 import { useRegister } from "../../hooks/use-register";
-import { SuccessDialog } from "../../components/SuccessDialog";
 
 type NavigationProps = NativeStackNavigationProp<AuthStackParams, "Register">;
 
@@ -26,13 +25,12 @@ export default function RegisterScreen() {
     const navigation = useNavigation<NavigationProps>();
     const [type, setType] = useState<"COMPANY" | "USER">("COMPANY");
     const [showPassword, setShowPassword] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [showSuccess, setShowSuccess] = useState(false);
 
     const {
         control,
         handleSubmit,
         setValue,
+        reset,
         formState: { errors, isValid },
     } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
@@ -48,14 +46,15 @@ export default function RegisterScreen() {
     };
 
     const onSubmit = (data: RegisterForm) => {
-        setErrorMessage(null);
-        register(data, {
-            onSuccess: () => setShowSuccess(true),
-            onError: (err: any) => {
-                const msg = err?.response?.data?.message ?? "Erro ao cadastrar. Tente novamente.";
-                setErrorMessage(msg);
-            },
-        });
+        register(
+            { type: data?.type, data },
+            {
+                onSuccess: () => {
+                    reset();
+                    navigation.replace("Login");
+                }
+            }
+        );
     };
 
     return (
@@ -68,7 +67,6 @@ export default function RegisterScreen() {
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
-                {/* ── Header ── */}
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
                         <MaterialCommunityIcons name="arrow-left" size={22} color="#111" />
@@ -80,7 +78,6 @@ export default function RegisterScreen() {
 
                 <View style={styles.formArea}>
 
-                    {/* ── Seletor de tipo ── */}
                     <View style={styles.typeContainer}>
                         <TouchableOpacity
                             style={[styles.typeBtn, type === "COMPANY" && styles.typeBtnActive]}
@@ -113,10 +110,8 @@ export default function RegisterScreen() {
                         </TouchableOpacity>
                     </View>
 
-                    {/* ── Campos COMPANY ── */}
                     {type === "COMPANY" ? (
                         <>
-                            {/* Nome da empresa */}
                             <Text style={styles.label}>NOME DA EMPRESA</Text>
                             <Controller
                                 control={control}
@@ -130,7 +125,6 @@ export default function RegisterScreen() {
                             />
                             {errors.name && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.name.message}</Text></View>}
 
-                            {/* CNPJ */}
                             <Text style={[styles.label, { marginTop: 14 }]}>CNPJ</Text>
                             <Controller
                                 control={control}
@@ -147,7 +141,6 @@ export default function RegisterScreen() {
 
                     ) : (
                         <>
-                            {/* Código da empresa */}
                             <Text style={styles.label}>CÓDIGO DA EMPRESA</Text>
                             <Controller
                                 control={control}
@@ -161,7 +154,6 @@ export default function RegisterScreen() {
                             />
                             {errors.companyCode && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.companyCode.message}</Text></View>}
 
-                            {/* Nome completo */}
                             <Text style={[styles.label, { marginTop: 14 }]}>NOME COMPLETO</Text>
                             <Controller
                                 control={control}
@@ -175,7 +167,6 @@ export default function RegisterScreen() {
                             />
                             {errors.name && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.name.message}</Text></View>}
 
-                            {/* CPF */}
                             <Text style={[styles.label, { marginTop: 14 }]}>CPF</Text>
                             <Controller
                                 control={control}
@@ -191,7 +182,6 @@ export default function RegisterScreen() {
                         </>
                     )}
 
-                    {/* ── E-mail ── */}
                     <Text style={[styles.label, { marginTop: 14 }]}>E-MAIL</Text>
                     <Controller
                         control={control}
@@ -205,7 +195,6 @@ export default function RegisterScreen() {
                     />
                     {errors.email && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.email.message}</Text></View>}
 
-                    {/* ── Senha ── */}
                     <Text style={[styles.label, { marginTop: 14 }]}>SENHA</Text>
                     <Controller
                         control={control}
@@ -222,15 +211,6 @@ export default function RegisterScreen() {
                     />
                     {errors.password && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.password.message}</Text></View>}
 
-                    {/* ── Erro da API ── */}
-                    {errorMessage && (
-                        <View style={styles.errorBox}>
-                            <MaterialCommunityIcons name="alert-circle-outline" size={16} color="#E24B4A" />
-                            <Text style={styles.errorBoxText}>{errorMessage}</Text>
-                        </View>
-                    )}
-
-                    {/* ── Botão ── */}
                     <TouchableOpacity
                         style={[styles.btnLogin, (!isValid || loading) && styles.btnLoginDisabled]}
                         onPress={handleSubmit(onSubmit)}
@@ -245,7 +225,6 @@ export default function RegisterScreen() {
                     <View style={styles.forgotBtn} />
                 </View>
 
-                {/* ── Link login ── */}
                 <TouchableOpacity
                     style={styles.cadastroBtn}
                     onPress={() => navigation.replace("Login")}
@@ -258,27 +237,6 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
 
                 <Text style={styles.footer}>Acesso restrito a técnicos autorizados</Text>
-
-                {/* ── Dialog de sucesso ── */}
-                <SuccessDialog
-                    visible={showSuccess}
-                    title="Conta criada!"
-                    message={
-                        type === "COMPANY"
-                            ? "Sua empresa foi cadastrada com sucesso. Faça login para continuar."
-                            : "Cadastro realizado! Faça login para acessar o app."
-                    }
-                    btnText="Ir para o login"
-                    onClose={() => {
-                        setShowSuccess(false);
-                        navigation.dispatch(
-                            CommonActions.reset({
-                                index: 0,
-                                routes: [{ name: "Login", params: { cadastroSucesso: true } }],
-                            })
-                        );
-                    }}
-                />
             </ScrollView>
         </KeyboardAvoidingView>
     );

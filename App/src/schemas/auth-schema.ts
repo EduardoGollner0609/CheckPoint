@@ -16,8 +16,8 @@ export const registerSchema = z.object({
     name: z.string().optional(),
     document: z.string().optional(),
     companyCode: z.string().optional(),
-    email: z.string().email("E-mail inválido"),
-    password: z.string().min(6, "Mínimo 6 caracteres"),
+    email: z.string().optional(),
+    password: z.string().optional(),
 });
 
 export type RegisterForm = z.infer<typeof registerSchema>;
