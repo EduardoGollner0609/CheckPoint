@@ -6,34 +6,37 @@ import {
     ScrollView,
     StyleSheet,
     Text,
-    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
-import { useForm, Controller } from "react-hook-form";
-import { RegisterForm, registerSchema } from '../../schemas/auth-schema'
+import { useForm } from "react-hook-form";
+import { RegisterForm, registerSchema } from '../../schemas/auth-schema';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigation, CommonActions } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { AuthStackParams } from "../../navigation/AuthNavigator";
 import { maskCnpj, maskCpf, onlyNumbers } from "../../helpers/mask";
-import { useRegister } from "../../hooks/use-register";
-import { AxiosError, AxiosRequestConfig } from "axios";
+import useRegister from "../../hooks/use-register";
+import { AxiosError } from "axios";
 import { backendErrorInForm } from "../../utils/request";
+import { FormInput } from "../../components/FormInput";
 
 type NavigationProps = NativeStackNavigationProp<AuthStackParams, "Register">;
+type MainType = "COMPANY" | "PERSON";
+type PersonSubtype = "EMPLOYEE" | "SELF_EMPLOYED";
 
 export default function RegisterScreen() {
     const navigation = useNavigation<NavigationProps>();
-    const [type, setType] = useState<"COMPANY" | "USER">("COMPANY");
+    const [mainType, setMainType] = useState<MainType>("COMPANY");
+    const [personType, setPersonType] = useState<PersonSubtype>("EMPLOYEE");
     const [showPassword, setShowPassword] = useState(false);
 
     const {
         control,
         handleSubmit,
-        reset,
+        setValue,
         formState: { errors, isValid },
-        setError
+        setError,
     } = useForm<RegisterForm>({
         resolver: zodResolver(registerSchema),
         mode: "onChange",
@@ -42,47 +45,44 @@ export default function RegisterScreen() {
 
     const { mutate: register, isPending: loading } = useRegister();
 
-    const handleSelectType = (t: "COMPANY" | "USER") => {
-        setType(t);
+    const handleSelectMain = (t: MainType) => {
+        setMainType(t);
+        const formType = t === "COMPANY" ? "COMPANY" : personType;
+        setValue("type", formType as any, { shouldValidate: true });
+        setValue("name", "", { shouldValidate: false });
+        setValue("document", "", { shouldValidate: false });
+        setValue("companyCode", "", { shouldValidate: false });
+        setValue("email", "", { shouldValidate: false });
+        setValue("password", "", { shouldValidate: false });
+    };
 
-        reset({
-            type: t,
-            name: "",
-            document: "",
-            companyCode: "",
-            email: "",
-            password: "",
-        });
+    const handleSelectPerson = (t: PersonSubtype) => {
+        setPersonType(t);
+        setValue("type", t as any, { shouldValidate: true });
+        setValue("companyCode", "", { shouldValidate: false });
+        setValue("document", "", { shouldValidate: false });
     };
 
     const onSubmit = (data: RegisterForm) => {
-        const request = { ...data, document: onlyNumbers(data.document) }
-
+        const request = { ...data, document: onlyNumbers(data.document) };
         register(
-            { type: data?.type, data: request },
+            { type: data.type, data: request },
             {
-                onSuccess: () => {
-                    navigation.replace("Login");
-                },
+                onSuccess: () => navigation.replace("Login"),
                 onError: (err: AxiosError<any>) => {
-                    const apiErrors = err?.response?.data?.errors;
-
-                    backendErrorInForm(apiErrors, setError);
-                }
+                    backendErrorInForm(err?.response?.data?.errors, setError);
+                },
             }
         );
     };
 
+    const isPerson = mainType === "PERSON";
+    const isEmployee = personType === "EMPLOYEE";
+
     return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-            <ScrollView
-                contentContainerStyle={styles.scroll}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
+        <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === "ios" ? "padding" : "height"}>
+            <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
                 <View style={styles.header}>
                     <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
                         <MaterialCommunityIcons name="arrow-left" size={22} color="#111" />
@@ -96,136 +96,141 @@ export default function RegisterScreen() {
 
                     <View style={styles.typeContainer}>
                         <TouchableOpacity
-                            style={[styles.typeBtn, type === "COMPANY" && styles.typeBtnActive]}
-                            onPress={() => handleSelectType("COMPANY")}
+                            style={[styles.typeBtn, !isPerson && styles.typeBtnActive]}
+                            onPress={() => handleSelectMain("COMPANY")}
                             activeOpacity={0.8}
                         >
-                            <MaterialCommunityIcons
-                                name="office-building-outline"
-                                size={18}
-                                color={type === "COMPANY" ? "#fff" : "#888"}
-                            />
-                            <Text style={[styles.typeText, type === "COMPANY" && styles.typeTextActive]}>
-                                Empresa
-                            </Text>
+                            <MaterialCommunityIcons name="office-building-outline" size={18} color={!isPerson ? "#fff" : "#888"} />
+                            <Text style={[styles.typeText, !isPerson && styles.typeTextActive]}>Empresa</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                            style={[styles.typeBtn, type === "USER" && styles.typeBtnActive]}
-                            onPress={() => handleSelectType("USER")}
+                            style={[styles.typeBtn, isPerson && styles.typeBtnActive]}
+                            onPress={() => handleSelectMain("PERSON")}
                             activeOpacity={0.8}
                         >
-                            <MaterialCommunityIcons
-                                name="account-hard-hat-outline"
-                                size={18}
-                                color={type === "USER" ? "#fff" : "#888"}
-                            />
-                            <Text style={[styles.typeText, type === "USER" && styles.typeTextActive]}>
-                                Funcionário
-                            </Text>
+                            <MaterialCommunityIcons name="account-outline" size={18} color={isPerson ? "#fff" : "#888"} />
+                            <Text style={[styles.typeText, isPerson && styles.typeTextActive]}>Pessoa</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {type === "COMPANY" ? (
+                    {isPerson && (
+                        <View style={styles.subTypeContainer}>
+                            <TouchableOpacity
+                                style={[styles.subTypeBtn, isEmployee && styles.subTypeBtnActive]}
+                                onPress={() => handleSelectPerson("EMPLOYEE")}
+                                activeOpacity={0.8}
+                            >
+                                <MaterialCommunityIcons name="account-hard-hat-outline" size={16} color={isEmployee ? "#1D9E75" : "#aaa"} />
+                                <Text style={[styles.subTypeText, isEmployee && styles.subTypeTextActive]}>Funcionário</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.subTypeBtn, !isEmployee && styles.subTypeBtnActive]}
+                                onPress={() => handleSelectPerson("SELF_EMPLOYED")}
+                                activeOpacity={0.8}
+                            >
+                                <MaterialCommunityIcons name="briefcase-account-outline" size={16} color={!isEmployee ? "#1D9E75" : "#aaa"} />
+                                <Text style={[styles.subTypeText, !isEmployee && styles.subTypeTextActive]}>Autônomo</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    {!isPerson && (
                         <>
                             <Text style={styles.label}>NOME DA EMPRESA</Text>
-                            <Controller
+                            <FormInput
                                 control={control}
                                 name="name"
-                                render={({ field: { onChange, value } }) => (
-                                    <View style={[styles.inputWrapper, value && styles.inputFocus, errors.name && styles.inputError]}>
-                                        <MaterialCommunityIcons name="domain" size={18} color={errors.name ? "#E24B4A" : value ? "#1D9E75" : "#bbb"} />
-                                        <TextInput style={styles.input} placeholder="Nome Empresa Ltda" placeholderTextColor="#bbb" value={value} onChangeText={onChange} autoCapitalize="words" />
-                                    </View>
-                                )}
+                                icon="domain"
+                                placeholder="Nome Empresa Ltda"
+                                autoCapitalize="words"
+                                error={errors.name}
                             />
-                            {errors.name && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.name.message}</Text></View>}
 
                             <Text style={[styles.label, { marginTop: 14 }]}>CNPJ</Text>
-                            <Controller
+                            <FormInput
                                 control={control}
                                 name="document"
-                                render={({ field: { onChange, value } }) => (
-                                    <View style={[styles.inputWrapper, value && styles.inputFocus, errors.document && styles.inputError]}>
-                                        <MaterialCommunityIcons name="card-account-details-outline" size={18} color={errors.document ? "#E24B4A" : value ? "#1D9E75" : "#bbb"} />
-                                        <TextInput style={styles.input} placeholder="XX.XXX.XXX/XXXX-XX" placeholderTextColor="#bbb" value={value} onChangeText={v => onChange(maskCnpj(v))} keyboardType="numeric" />
-                                    </View>
-                                )}
+                                icon="card-account-details-outline"
+                                placeholder="XX.XXX.XXX/XXXX-XX"
+                                keyboardType="numeric"
+                                transform={maskCnpj}
+                                error={errors.document}
                             />
-                            {errors.document && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.document.message}</Text></View>}
                         </>
+                    )}
 
-                    ) : (
+                    {isPerson && (
                         <>
-                            <Text style={styles.label}>CÓDIGO DA EMPRESA</Text>
-                            <Controller
-                                control={control}
-                                name="companyCode"
-                                render={({ field: { onChange, value } }) => (
-                                    <View style={[styles.inputWrapper, value && styles.inputFocus, errors.companyCode && styles.inputError]}>
-                                        <MaterialCommunityIcons name="identifier" size={18} color={errors.companyCode ? "#E24B4A" : value ? "#1D9E75" : "#bbb"} />
-                                        <TextInput style={styles.input} placeholder="Ex: ABC123" placeholderTextColor="#bbb" value={value} onChangeText={v => onChange(v.toUpperCase())} autoCapitalize="characters" />
-                                    </View>
-                                )}
-                            />
-                            {errors.companyCode && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.companyCode.message}</Text></View>}
+                            {isEmployee && (
+                                <>
+                                    <Text style={styles.label}>CÓDIGO DA EMPRESA</Text>
+                                    <FormInput
+                                        control={control}
+                                        name="companyCode"
+                                        icon="identifier"
+                                        placeholder="Ex: ABC123"
+                                        autoCapitalize="characters"
+                                        transform={v => v.toUpperCase()}
+                                        error={errors.companyCode}
+                                    />
+                                </>
+                            )}
 
-                            <Text style={[styles.label, { marginTop: 14 }]}>NOME COMPLETO</Text>
-                            <Controller
+                            <Text style={[styles.label, { marginTop: isEmployee ? 14 : 0 }]}>NOME COMPLETO</Text>
+                            <FormInput
                                 control={control}
                                 name="name"
-                                render={({ field: { onChange, value } }) => (
-                                    <View style={[styles.inputWrapper, value && styles.inputFocus, errors.name && styles.inputError]}>
-                                        <MaterialCommunityIcons name="account-outline" size={18} color={errors.name ? "#E24B4A" : value ? "#1D9E75" : "#bbb"} />
-                                        <TextInput style={styles.input} placeholder="João da Silva" placeholderTextColor="#bbb" value={value} onChangeText={onChange} autoCapitalize="words" />
-                                    </View>
-                                )}
+                                icon="account-outline"
+                                placeholder="João da Silva"
+                                autoCapitalize="words"
+                                error={errors.name}
                             />
-                            {errors.name && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.name.message}</Text></View>}
 
                             <Text style={[styles.label, { marginTop: 14 }]}>CPF</Text>
-                            <Controller
+                            <FormInput
                                 control={control}
                                 name="document"
-                                render={({ field: { onChange, value } }) => (
-                                    <View style={[styles.inputWrapper, value && styles.inputFocus, errors.document && styles.inputError]}>
-                                        <MaterialCommunityIcons name="card-account-details-outline" size={18} color={errors.document ? "#E24B4A" : value ? "#1D9E75" : "#bbb"} />
-                                        <TextInput style={styles.input} placeholder="XXX.XXX.XXX-XX" placeholderTextColor="#bbb" value={value} onChangeText={v => onChange(maskCpf(v))} keyboardType="numeric" />
-                                    </View>
-                                )}
+                                icon="card-account-details-outline"
+                                placeholder="XXX.XXX.XXX-XX"
+                                keyboardType="numeric"
+                                transform={maskCpf}
+                                error={errors.document}
                             />
-                            {errors.document && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.document.message}</Text></View>}
                         </>
                     )}
 
                     <Text style={[styles.label, { marginTop: 14 }]}>E-MAIL</Text>
-                    <Controller
+                    <FormInput
                         control={control}
                         name="email"
-                        render={({ field: { onChange, value } }) => (
-                            <View style={[styles.inputWrapper, value && styles.inputFocus, errors.email && styles.inputError]}>
-                                <MaterialCommunityIcons name="email-outline" size={18} color={errors.email ? "#E24B4A" : value ? "#1D9E75" : "#bbb"} />
-                                <TextInput style={styles.input} placeholder="seu@email.com.br" placeholderTextColor="#bbb" value={value} onChangeText={onChange} keyboardType="email-address" autoCapitalize="none" />
-                            </View>
-                        )}
+                        icon="email-outline"
+                        placeholder="seu@email.com.br"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        error={errors.email}
                     />
-                    {errors.email && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.email.message}</Text></View>}
 
                     <Text style={[styles.label, { marginTop: 14 }]}>SENHA</Text>
-                    <Controller
+                    <FormInput
                         control={control}
                         name="password"
-                        render={({ field: { onChange, value } }) => (
-                            <View style={[styles.inputWrapper, value && styles.inputFocus, errors.password && styles.inputError]}>
-                                <MaterialCommunityIcons name="lock-outline" size={18} color={errors.password ? "#E24B4A" : value ? "#1D9E75" : "#bbb"} />
-                                <TextInput style={styles.input} placeholder="Mínimo 6 caracteres" placeholderTextColor="#bbb" value={value} onChangeText={onChange} secureTextEntry={!showPassword} autoCapitalize="none" />
-                                <TouchableOpacity onPress={() => setShowPassword(v => !v)}>
-                                    <MaterialCommunityIcons name={showPassword ? "eye-off-outline" : "eye-outline"} size={18} color="#bbb" />
-                                </TouchableOpacity>
-                            </View>
-                        )}
+                        icon="lock-outline"
+                        placeholder="Mínimo 6 caracteres"
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
+                        error={errors.password}
+                        rightElement={
+                            <TouchableOpacity onPress={() => setShowPassword(v => !v)}>
+                                <MaterialCommunityIcons
+                                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                                    size={18}
+                                    color="#bbb"
+                                />
+                            </TouchableOpacity>
+                        }
                     />
-                    {errors.password && <View style={styles.erroRow}><MaterialCommunityIcons name="alert-circle-outline" size={12} color="#E24B4A" /><Text style={styles.erroText}>{errors.password.message}</Text></View>}
 
                     <TouchableOpacity
                         style={[styles.btnLogin, (!isValid || loading) && styles.btnLoginDisabled]}
@@ -238,17 +243,12 @@ export default function RegisterScreen() {
                         </Text>
                     </TouchableOpacity>
 
-                    <View style={styles.forgotBtn} />
+                    <View style={{ height: 16 }} />
                 </View>
 
-                <TouchableOpacity
-                    style={styles.cadastroBtn}
-                    onPress={() => navigation.replace("Login")}
-                    activeOpacity={0.7}
-                >
+                <TouchableOpacity style={styles.cadastroBtn} onPress={() => navigation.replace("Login")} activeOpacity={0.7}>
                     <Text style={styles.cadastroText}>
-                        Já tem conta?{'  '}
-                        <Text style={styles.cadastroLink}>Entrar</Text>
+                        Já tem conta?{'  '}<Text style={styles.cadastroLink}>Entrar</Text>
                     </Text>
                 </TouchableOpacity>
 
@@ -266,7 +266,8 @@ const styles = StyleSheet.create({
     title: { fontSize: 24, fontWeight: "600", color: "#111", marginTop: 4 },
     subtitle: { fontSize: 14, color: "#888" },
     formArea: { width: "100%" },
-    typeContainer: { flexDirection: "row", gap: 10, marginBottom: 24 },
+
+    typeContainer: { flexDirection: "row", gap: 10, marginBottom: 16 },
     typeBtn: {
         flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
         gap: 8, height: 46, borderRadius: 12, borderWidth: 1,
@@ -275,30 +276,40 @@ const styles = StyleSheet.create({
     typeBtnActive: { backgroundColor: "#1D9E75", borderColor: "#1D9E75" },
     typeText: { fontSize: 14, fontWeight: "500", color: "#888" },
     typeTextActive: { color: "#fff" },
+
+    // Subseletor pill
+    subTypeContainer: {
+        flexDirection: "row",
+        gap: 4,
+        marginBottom: 24,
+        backgroundColor: "#f0f0f0",
+        borderRadius: 10,
+        padding: 4,
+    },
+    subTypeBtn: {
+        flex: 1, flexDirection: "row", alignItems: "center",
+        justifyContent: "center", gap: 6, height: 36, borderRadius: 8,
+    },
+    subTypeBtnActive: {
+        backgroundColor: "#fff",
+        shadowColor: "#000",
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 2,
+    },
+    subTypeText: { fontSize: 13, fontWeight: "500", color: "#aaa" },
+    subTypeTextActive: { color: "#1D9E75" },
+
     label: { fontSize: 11, fontWeight: "500", color: "#555", letterSpacing: 0.5, marginBottom: 6 },
-    inputWrapper: {
-        flexDirection: "row", alignItems: "center", height: 50,
-        borderRadius: 12, borderWidth: 1, borderColor: "#e5e5e5",
-        backgroundColor: "#fafafa", paddingHorizontal: 14, gap: 10, marginBottom: 2,
-    },
-    inputFocus: { borderColor: "#1D9E75", backgroundColor: "#f0faf6" },
-    inputError: { borderColor: "#E24B4A", backgroundColor: "#fff5f5" },
-    input: { flex: 1, fontSize: 14, color: "#111", paddingVertical: 0 },
-    erroRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 5, marginBottom: 2, marginLeft: 2 },
-    erroText: { fontSize: 11, color: "#E24B4A" },
-    errorBox: {
-        flexDirection: "row", alignItems: "center", gap: 8,
-        backgroundColor: "#fff0f0", borderWidth: 1, borderColor: "#fcc",
-        borderRadius: 10, padding: 12, marginTop: 14, marginBottom: 4,
-    },
-    errorBoxText: { fontSize: 13, color: "#E24B4A", flex: 1 },
+
     btnLogin: {
         height: 52, borderRadius: 14, backgroundColor: "#1D9E75",
         alignItems: "center", justifyContent: "center", marginTop: 14,
     },
     btnLoginDisabled: { backgroundColor: "#a8d9c7" },
     btnText: { fontSize: 16, fontWeight: "600", color: "#fff" },
-    forgotBtn: { height: 16 },
+
     cadastroBtn: { alignItems: "center", paddingVertical: 8 },
     cadastroText: { fontSize: 13, color: "#888" },
     cadastroLink: { color: "#1D9E75", fontWeight: "500" },

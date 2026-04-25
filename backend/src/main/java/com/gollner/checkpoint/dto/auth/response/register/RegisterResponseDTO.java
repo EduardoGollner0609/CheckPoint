@@ -1,4 +1,4 @@
-package com.gollner.checkpoint.dto.auth.response;
+package com.gollner.checkpoint.dto.auth.response.register;
 
 import java.util.UUID;
 

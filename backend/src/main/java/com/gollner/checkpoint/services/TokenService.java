@@ -23,7 +23,6 @@ public class TokenService {
                 .withSubject(user.getEmail())
                 .withClaim("userId", user.getId().toString())
                 .withClaim("role", user.getRole().name())
-                .withClaim("companyId", user.getCompany().getId().toString())
                 .withIssuedAt(Instant.now())
                 .withExpiresAt(Instant.now().plusSeconds(86400))
                 .sign(Algorithm.HMAC256(secret));
@@ -37,8 +36,7 @@ public class TokenService {
             return Optional.of(new JWTUserData(
                     decode.getClaim("userId").asString(),
                     decode.getSubject(),
-                    decode.getClaim("role").asString(),
-                    decode.getClaim("companyId").asString()
+                    decode.getClaim("role").asString()
             ));
         } catch (JWTVerificationException ex) {
             return Optional.empty();

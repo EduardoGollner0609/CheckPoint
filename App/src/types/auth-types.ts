@@ -5,10 +5,23 @@ export type RegisterCompanyDTO = {
     password: string;
 };
 
-export type RegisterUserDTO = {
+export type RegisterEmployeeDTO = {
     name: string;
     document: string;
     email: string;
     password: string;
     companyCode: string;
 };
+
+export type RegisterSelfEmployedDTO = {
+    name: string;
+    document: string;
+    email: string;
+    password: string;
+};
+
+
+export type LoginRequestDTO = {
+    email: string,
+    password: string
+}

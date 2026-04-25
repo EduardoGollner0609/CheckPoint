@@ -1,27 +1,32 @@
 import { useMutation } from "@tanstack/react-query";
-import { registerUser, registerCompany } from "../services/auth-service";
-import { RegisterCompanyDTO, RegisterUserDTO } from "../types/auth-types";
+import { registerCompany, registerEmployee, registerSelfEmployed } from "../services/auth-service";
+import { RegisterCompanyDTO, RegisterEmployeeDTO, RegisterSelfEmployedDTO } from "../types/auth-types";
 import { AxiosError } from "axios";
 import Toast from "react-native-toast-message";
 
 type RegisterPayload = {
-    type: "COMPANY" | "USER";
-    data: RegisterUserDTO | RegisterCompanyDTO;
+    type: "COMPANY" | "EMPLOYEE" | "SELF_EMPLOYED";
+    data: RegisterCompanyDTO | RegisterEmployeeDTO | RegisterSelfEmployedDTO;
 };
 
-export function useRegister() {
+export default function useRegister() {
     return useMutation({
+        mutationKey: ['use-register'],
         mutationFn: ({ type, data }: RegisterPayload) => {
-            return type === "COMPANY"
-                ? registerCompany(data as RegisterCompanyDTO)
-                : registerUser(data as RegisterUserDTO);
-        }, onSuccess: (_data, variables) => {
+            switch (type) {
+                case "COMPANY":
+                    return registerCompany(data as RegisterCompanyDTO);
+                case "EMPLOYEE":
+                    return registerEmployee(data as RegisterEmployeeDTO);
+                case "SELF_EMPLOYED":
+                    return registerSelfEmployed(data as RegisterSelfEmployedDTO);
+            }
+        },
+        onSuccess: (_data, variables) => {
             Toast.show({
                 type: "success",
-                text1: variables.type === "COMPANY" ? "Empresa cadastrada!" : "Funcionário cadastrado!",
-                text2: variables.type === "COMPANY"
-                    ? "Sua empresa foi registrada com sucesso."
-                    : "Cadastro realizado com sucesso.",
+                text1: variables.type === "COMPANY" ? "Empresa cadastrada!" : "Usuário cadastrado!",
+                text2: "Cadastro realizado com sucesso.",
             });
         },
         onError: (error: AxiosError<any>) => {

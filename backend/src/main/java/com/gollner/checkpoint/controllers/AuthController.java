@@ -1,13 +1,12 @@
 package com.gollner.checkpoint.controllers;
 
-import com.gollner.checkpoint.dto.auth.request.LoginRequestDTO;
-import com.gollner.checkpoint.dto.auth.response.LoginResponseDTO;
+import com.gollner.checkpoint.dto.auth.request.login.LoginRequestDTO;
+import com.gollner.checkpoint.dto.auth.request.register.RegisterEmployeeDTO;
+import com.gollner.checkpoint.dto.auth.request.register.RegisterSelfEmployedDTO;
+import com.gollner.checkpoint.dto.auth.response.login.LoginResponseDTO;
 import com.gollner.checkpoint.services.AuthService;
-import com.gollner.checkpoint.services.UserService;
-import com.gollner.checkpoint.services.CompanyService;
-import com.gollner.checkpoint.dto.auth.request.RegisterCompanyDTO;
-import com.gollner.checkpoint.dto.auth.response.RegisterResponseDTO;
-import com.gollner.checkpoint.dto.auth.request.RegisterUserDTO;
+import com.gollner.checkpoint.dto.auth.request.register.RegisterCompanyDTO;
+import com.gollner.checkpoint.dto.auth.response.register.RegisterResponseDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,15 +17,9 @@ import java.net.URI;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final UserService userService;
-    private final CompanyService companyService;
     private final AuthService authService;
 
-    public AuthController(UserService userService,
-                          CompanyService companyService,
-                          AuthService authService) {
-        this.userService = userService;
-        this.companyService = companyService;
+    public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
@@ -39,7 +32,7 @@ public class AuthController {
     @PostMapping("/register/company")
     public ResponseEntity<RegisterResponseDTO> registerCompany(@Valid @RequestBody RegisterCompanyDTO dto) {
 
-        RegisterResponseDTO response = companyService.register(dto);
+        RegisterResponseDTO response = authService.registerCompany(dto);
 
         URI location = URI.create("/auth/companies/" + response.userId());
 
@@ -48,10 +41,22 @@ public class AuthController {
                 .body(response);
     }
 
-    @PostMapping("/register/user")
-    public ResponseEntity<RegisterResponseDTO> registerUser(@Valid @RequestBody RegisterUserDTO dto) {
+    @PostMapping("/register/employee")
+    public ResponseEntity<RegisterResponseDTO> registerEmployee(@Valid @RequestBody RegisterEmployeeDTO dto) {
 
-        RegisterResponseDTO response = userService.register(dto);
+        RegisterResponseDTO response = authService.registerEmployee(dto);
+
+        URI location = URI.create("/auth/users/" + response.userId());
+
+        return ResponseEntity
+                .created(location)
+                .body(response);
+    }
+
+    @PostMapping("/register/self-employed")
+    public ResponseEntity<RegisterResponseDTO> registerSelfEmployed(@Valid @RequestBody RegisterSelfEmployedDTO dto) {
+
+        RegisterResponseDTO response = authService.registerSelfEmployed(dto);
 
         URI location = URI.create("/auth/users/" + response.userId());
 

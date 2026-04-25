@@ -4,17 +4,15 @@ import { isValidCNPJ, isValidCPF, isValidEmail } from '../helpers/validations';
 
 export const loginSchema = z.object({
     email: z
-        .string({ message: 'E-mail obrigatório' })
-        .email('E-mail inválido'),
-    password: z
-        .string({ message: 'Senha obrigatória' })
-        .min(6, 'Mínimo 6 caracteres'),
+        .string()
+        .min(1, "Email é obrigatório")
+        .email("Email inválido")
+        .refine(isValidEmail, "Email inválido"),
+    password: z.string().min(6, "A senha deve conter no minímo 6 caracteres")
 });
 
 export type LoginForm = z.infer<typeof loginSchema>;
-
-export const registerSchema = z.object({
-    type: z.enum(["COMPANY", "USER"]),
+const baseSchema = z.object({
     name: z
         .string()
         .min(4, "O nome deve ter entre 4 e 70 caracteres")
@@ -29,35 +27,39 @@ export const registerSchema = z.object({
         .min(1, "Email é obrigatório")
         .email("Email inválido")
         .refine(isValidEmail, "Email inválido"),
-    password: z.string().min(6, "A senha deve conter no minímo 6 caracteres"),
-}).superRefine((data, ctx) => {
-    if (data.type === "USER") {
-        if (!isValidCPF(data.document)) {
-            ctx.addIssue({
-                path: ["document"],
-                code: z.ZodIssueCode.custom,
-                message: "CPF inválido",
-            });
-        }
+    password: z.string().min(6, "A senha deve conter no minímo 6 caracteres")
+});
 
-        if (!data.companyCode) {
-            ctx.addIssue({
-                path: ["companyCode"],
-                code: z.ZodIssueCode.custom,
-                message: "Código da empresa é obrigatório",
-            });
-        }
-    }
 
-    if (data.type === "COMPANY") {
-        if (!isValidCNPJ(data.document)) {
-            ctx.addIssue({
-                path: ["document"],
-                code: z.ZodIssueCode.custom,
-                message: "CNPJ inválido",
-            });
-        }
-    }
-});;
+const companySchema = baseSchema.extend({
+    type: z.literal("COMPANY"),
+}).refine((data) => isValidCNPJ(data.document), {
+    path: ["document"],
+    message: "CNPJ inválido",
+});
+
+const employeeSchema = baseSchema.extend({
+    type: z.literal("EMPLOYEE"),
+    companyCode: z.string().min(1, "Código da empresa é obrigatório"),
+}).refine((data) => isValidCPF(data.document), {
+    path: ["document"],
+    message: "CPF inválido",
+});
+
+const selfEmployedSchema = baseSchema.extend({
+    type: z.literal("SELF_EMPLOYED"),
+}).refine((data) => isValidCPF(data.document), {
+    path: ["document"],
+    message: "CPF inválido",
+});
+
+export const registerSchema = z.discriminatedUnion("type", [
+    companySchema,
+    employeeSchema,
+    selfEmployedSchema,
+]);
 
 export type RegisterForm = z.infer<typeof registerSchema>;
+
+
+
